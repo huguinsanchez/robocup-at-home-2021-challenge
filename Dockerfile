@@ -1,5 +1,4 @@
 FROM ros:melodic-perception
-#FROM ghcr.io/hsr-project/hsrb_robocup_dspl_binary:forclass
 
 SHELL [ "/bin/bash", "-c" ]
 
@@ -32,4 +31,3 @@ RUN cd /workspace && /ros_entrypoint.sh catkin_make install -DCMAKE_INSTALL_PREF
 
 # command to run the algorithm
 CMD roslaunch robocup_challenge run.launch
-
