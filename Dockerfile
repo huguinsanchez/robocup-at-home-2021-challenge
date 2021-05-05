@@ -1,4 +1,4 @@
-FROM ghcr.io/hsr-project/hsrb_robocup_dspl_binary:forclass
+FROM ros:melodic-perception
 
 SHELL [ "/bin/bash", "-c" ]
 
@@ -6,12 +6,6 @@ SHELL [ "/bin/bash", "-c" ]
 RUN apt-get update && \
     apt-get install -y git ros-$ROS_DISTRO-moveit ros-$ROS_DISTRO-moveit-commander ros-$ROS_DISTRO-move-base-msgs ros-$ROS_DISTRO-ros-numpy ros-$ROS_DISTRO-geometry && \
     apt-get clean
-RUN apt-get update
-#RUN rosdep init
-RUN apt-get install -y ros-$ROS_DISTRO-map-server
-RUN apt-get install -y qtbase5-dev
-RUN apt-get install -y ros-$ROS_DISTRO-pcl-ros
-
 
 # install bio_ik
 RUN source /opt/ros/$ROS_DISTRO/setup.bash && \
