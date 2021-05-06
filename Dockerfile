@@ -1,4 +1,4 @@
-FROM ros:melodic-perception
+FROM ghcr.io/hsr-project/hsrb_robocup_dspl_binary:forclass
 
 SHELL [ "/bin/bash", "-c" ]
 
