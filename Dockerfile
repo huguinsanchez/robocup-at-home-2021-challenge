@@ -7,12 +7,18 @@ RUN apt-get update && \
     apt-get install -y git ros-$ROS_DISTRO-moveit ros-$ROS_DISTRO-moveit-commander ros-$ROS_DISTRO-move-base-msgs ros-$ROS_DISTRO-ros-numpy ros-$ROS_DISTRO-geometry && \
     apt-get clean
 
+#install pumas navigation
+RUN apt-get install -y ros-$ROS_DISTRO-map-server
+RUN apt-get install -y qtbase5-dev 
+RUN apt-get install -y ros-$ROS_DISTRO-pcl-ros
+
 # install bio_ik
 RUN source /opt/ros/$ROS_DISTRO/setup.bash && \
     mkdir -p /bio_ik_ws/src && \
     cd /bio_ik_ws/src && \
     catkin_init_workspace && \
     git clone --depth=1 https://github.com/TAMS-Group/bio_ik.git && \
+	git clone https://github.com/huguinsanchez/pumas_navigation.git && \
     cd .. && \
     catkin_make install -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/ros/$ROS_DISTRO -DCATKIN_ENABLE_TESTING=0 && \
     cd / && rm -r /bio_ik_ws
