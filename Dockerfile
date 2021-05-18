@@ -36,5 +36,4 @@ RUN cd /workspace && /ros_entrypoint.sh rosdep install --from-paths src --ignore
 RUN cd /workspace && /ros_entrypoint.sh catkin_make install -DCMAKE_INSTALL_PREFIX=/opt/ros/$ROS_DISTRO
 
 # command to run the algorithm
-CMD roslaunch navigation_start navigation.launch &&\
-	roslaunch robocup_challenge run.launch
+CMD	roslaunch robocup_challenge run.launch
