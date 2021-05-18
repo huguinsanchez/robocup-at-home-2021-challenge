@@ -878,4 +878,5 @@ if __name__== '__main__':
         smach.StateMachine.add('POST_TABLE',    Post_table(),   transitions = {'failed':'PRE_TABLE2',  'succ': 'GO_BOX',       'tries':'INITIAL'}) 
         smach.StateMachine.add('PRE_TABLE2',    Pre_table2(),    transitions = {'failed':'PRE_TABLE2',    'succ': 'GRASP_TABLE',  'tries':'INITIAL'}) 
 
+
     outcome = sm.execute()   
