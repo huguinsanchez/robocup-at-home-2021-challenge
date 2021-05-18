@@ -9,6 +9,8 @@ catkin_package(
 install(PROGRAMS
   scripts/utils.py
   scripts/move.py
+  scripts/utils_takeshi.py
+  scripts/takeshi_smach_11.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
