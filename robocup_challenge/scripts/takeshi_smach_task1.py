@@ -720,8 +720,7 @@ class Pre_table2(smach.State):
                      
         
        
-
-     
+  
 #Define state GRASP_TABLE
 class Grasp_table(smach.State):
     def __init__(self):
