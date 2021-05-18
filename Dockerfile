@@ -11,6 +11,7 @@ RUN apt-get update && \
 RUN apt-get install -y ros-$ROS_DISTRO-map-server
 RUN apt-get install -y qtbase5-dev 
 RUN apt-get install -y ros-$ROS_DISTRO-pcl-ros
+RUN apt-get install -y ros-$ROS_DISTRO-smach
 
 # install bio_ik
 RUN source /opt/ros/$ROS_DISTRO/setup.bash && \
