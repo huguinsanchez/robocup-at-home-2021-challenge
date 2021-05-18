@@ -835,14 +835,7 @@ class Pre_table2(smach.State):
         
                      
         
-       
-
-
-
-
-        
-
-
+    
 #Initialize global variables and node
 def init(node_name):
     global listener, broadcaster, tfBuffer, tf_static_broadcaster, scene, rgbd    
