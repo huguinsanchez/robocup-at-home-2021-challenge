@@ -133,48 +133,98 @@ def publish_scene():
     add_object("table_tray", [0.65, 0.01, 0.7], [1.8, -0.65, 0.4], [0.5, 0.5])    
     return True
 
-
-def segment_table():
-    image_data = rgbd.get_image()
+def segment_table2(chan):
+    image_data=rgbd.get_image()
     points_data = rgbd.get_points()
 
-    mask = np.zeros((image_data.shape))
-    plane_mask = np.zeros((image_data.shape[0], image_data.shape[1]))
+    mask=np.zeros((image_data.shape))
+    plane_mask=np.zeros((image_data.shape[0],image_data.shape[1]))
 
-    plane_mask = image_data[:, :, 1]
+    plane_mask=image_data[:,:,chan]
 
-    ret, thresh = cv2.threshold(image_data[:, :, 2], 240, 255, 200)
-    plane_mask = points_data['z']
-    cv2_img = plane_mask.astype('uint8')
-    img = image_data[:, :, 0]
-    _, contours, hierarchy = cv2.findContours(thresh.astype('uint8'), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    i = 0
-    cents = []
+    ret,thresh = cv2.threshold(image_data[:,:,2],240,255,200)
+    plane_mask=points_data['z']
+    cv2_img=plane_mask.astype('uint8')
+    img=image_data[:,:,0]
+    _,contours, hierarchy = cv2.findContours(thresh.astype('uint8'),cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    i=0
+    cents=[]
     for i, contour in enumerate(contours):
         area = cv2.contourArea(contour)
 
-        if area > 2000 and area < 50000 :
-            boundRect = cv2.boundingRect(contour)
-            img = cv2.rectangle(img, (boundRect[0], boundRect[1]), (boundRect[0] + boundRect[2], boundRect[1] + boundRect[3]), (0, 0, 0), 2)
-            # calculate moments for each contour
-            xyz = []
+        if area > 200 and area < 50000 :
+            print('contour',i,'area',area)
 
-            for jy in range (boundRect[0], boundRect[0] + boundRect[2]):
-                for ix in range(boundRect[1], boundRect[1] + boundRect[3]):
-                    xyz.append(np.asarray((points_data['x'][ix, jy], points_data['y'][ix, jy], points_data['z'][ix, jy])))
-            xyz = np.asarray(xyz)
-            cent = xyz.mean(axis = 0)
+            boundRect = cv2.boundingRect(contour)
+            #just for drawing rect, dont waste too much time on this
+            print boundRect
+            img=cv2.rectangle(img,(boundRect[0], boundRect[1]),(boundRect[0]+boundRect[2], boundRect[1]+boundRect[3]), (0,0,0), 2)
+            # calculate moments for each contour
+            xyz=[]
+
+
+            for jy in range (boundRect[0], boundRect[0]+boundRect[2]):
+                for ix in range(boundRect[1], boundRect[1]+boundRect[3]):
+                    xyz.append(np.asarray((points_data['x'][ix,jy],points_data['y'][ix,jy],points_data['z'][ix,jy])))
+            xyz=np.asarray(xyz)
+            cent=xyz.mean(axis=0)
             cents.append(cent)
             M = cv2.moments(contour)
             # calculate x,y coordinate of center
             cX = int(M["m10"] / M["m00"])
             cY = int(M["m01"] / M["m00"])
             cv2.circle(img, (cX, cY), 5, (255, 255, 255), -1)
-            cv2.putText(img, "centroid_" + str(i) + "_" + str(cX) + ',' + str(cY), (cX - 25, cY - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2)
-    cents = np.asarray(cents)
-    return cents
-    
+            cv2.putText(img, "centroid_"+str(i)+"_"+str(cX)+','+str(cY)    ,    (cX - 25, cY - 25)   ,cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2)
+            print ('cX,cY',cX,cY)
+    cents=np.asarray(cents)
+    plt.imshow(img )
+    return (cents)
+def segment_table():
+    image_data=rgbd.get_image()
+    points_data = rgbd.get_points()
 
+    mask=np.zeros((image_data.shape))
+    plane_mask=np.zeros((image_data.shape[0],image_data.shape[1]))
+
+    plane_mask=image_data[:,:,1]
+
+    ret,thresh = cv2.threshold(image_data[:,:,2],240,255,200)
+    plane_mask=points_data['z']
+    cv2_img=plane_mask.astype('uint8')
+    img=image_data[:,:,0]
+    _,contours, hierarchy = cv2.findContours(thresh.astype('uint8'),cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    i=0
+    cents=[]
+    for i, contour in enumerate(contours):
+        area = cv2.contourArea(contour)
+
+        if area > 2000 and area < 50000 :
+            print('contour',i,'area',area)
+
+            boundRect = cv2.boundingRect(contour)
+            #just for drawing rect, dont waste too much time on this
+            print boundRect
+            img=cv2.rectangle(img,(boundRect[0], boundRect[1]),(boundRect[0]+boundRect[2], boundRect[1]+boundRect[3]), (0,0,0), 2)
+            # calculate moments for each contour
+            xyz=[]
+
+
+            for jy in range (boundRect[0], boundRect[0]+boundRect[2]):
+                for ix in range(boundRect[1], boundRect[1]+boundRect[3]):
+                    xyz.append(np.asarray((points_data['x'][ix,jy],points_data['y'][ix,jy],points_data['z'][ix,jy])))
+            xyz=np.asarray(xyz)
+            cent=xyz.mean(axis=0)
+            cents.append(cent)
+            M = cv2.moments(contour)
+            # calculate x,y coordinate of center
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+            cv2.circle(img, (cX, cY), 5, (255, 255, 255), -1)
+            cv2.putText(img, "centroid_"+str(i)+"_"+str(cX)+','+str(cY)    ,    (cX - 25, cY - 25)   ,cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2)
+            print ('cX,cY',cX,cY)
+    cents=np.asarray(cents)
+    plt.imshow(img )
+    return (cents)
 
 ########## Clases derived from Takeshi_states, please only define takeshi_run() ##########
 
@@ -307,8 +357,16 @@ class Pre_floor(smach.State):
         closest_cent = np.argmin(np.linalg.norm(np.asarray(trans_cents) - trans , axis = 1))
         xyz=np.asarray(trans_cents[closest_cent])
         print (xyz)
-        if xyz[0]== .05 :#and (xyz[1]< 1.4):  
-            print ('PAth to table1 clear, lets grasp table first')
+        if  (xyz[0] < 0.3) and (xyz[0]  >1.8):
+            print ('Path to table clear,,, try first ')
+            arm.set_named_target('go')
+            arm.go()
+            head.set_named_target('neutral')
+            head.go()             
+            self.tries ==5
+            return 'tries'
+        if  (xyz[1] > 1.55):  #<
+            print ('Too risky try table first ')
             arm.set_named_target('go')
             arm.go()
             head.set_named_target('neutral')
@@ -328,7 +386,12 @@ class Pre_floor(smach.State):
         wb = whole_body.get_current_joint_values()
         wb[0] += trans_hand[2] -0.05
         wb[1] += trans_hand[1]
+        try:
+            succ = whole_body.go(wb)
+        except MoveItCommanderException:
+            return  'failed'
         succ = whole_body.go(wb)
+
         if succ:
             return 'succ'
         else:
@@ -344,14 +407,14 @@ class Grasp_floor(smach.State):
     def execute(self,userdata):
         global trans_hand
         move_hand(1)
-        self.tries+=1
-        if self.tries==3:
-            arm.set_named_target('go')
-            arm.go()
-            head.set_named_target('neutral')
-            head.go()             
-            self.tries=0 
-            return'tries'
+        #self.tries+=1
+        #if self.tries==3:
+        #    arm.set_named_target('go')
+        #    arm.go()
+        #    head.set_named_target('neutral')
+        #    head.go()             
+        #    self.tries=0 
+        #    return'tries'
 
         
         print('grabbing cent',closest_cent)
@@ -362,7 +425,7 @@ class Grasp_floor(smach.State):
         
         wb[1] += trans_hand[1]
         succ = whole_body.go(wb)
-        trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static0', rospy.Time(0))
+        trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static'+ str(closest_cent), rospy.Time(0))
         move_hand(0)
         if succ:
             return 'succ'
@@ -388,7 +451,8 @@ class Post_floor(smach.State):
             arm.set_named_target('go')
             arm.go()
             head.set_named_target('neutral')
-            head.go()    
+            head.go()  
+
             return'tries'
         wb = whole_body.get_current_joint_values()
         wb[0] += - 0.3
@@ -403,6 +467,8 @@ class Post_floor(smach.State):
             arm.go()
             head.set_named_target('neutral')
             head.go()  
+            goal_x, goal_y, goal_yaw =  kl_mess1
+            move_base_goal(goal_x, goal_y , -90)
             self.tries=0  
             return 'succ'
             
@@ -411,12 +477,28 @@ class Post_floor(smach.State):
 
 ##### Define state GO_BOX #####
 #Se mueve hacia la caja baja el brazo y se acerca mas 
-class Go_box(Takeshi_states):
-    def takeshi_run(self):
+class Go_box(smach.State):
+    def __init__(self):
+        smach.State.__init__(self,outcomes=['succ','failed','tries'])
+        self.tries=0
+    def execute(self,userdata):
+        self.tries+=1
+        print(self.tries,'out of 5')
+        if self.tries==5:
+            self.tries=0 
+            return 'tries'
         goal_x, goal_y, goal_yaw =  kl_tray #Known location tray 1
-        succ = move_base_goal(goal_x, goal_y + 0.3, -90)
+        a = gripper.get_current_joint_values()
+        if np.linalg.norm(a - np.asarray(grasped)) > (np.linalg.norm(a - np.asarray(ungrasped))):
+            print ('object might have fallen')
+            return'tries'
+
+
+        succ = move_base_goal(goal_x, goal_y+0.3 , -90)
         publish_scene()
-        return succ
+        if succ:
+            return 'succ'
+        return 'failed'
         
 
 ##### Define state DELIVER #####
@@ -427,9 +509,10 @@ class Deliver(smach.State):
         self.tries=0
     def execute(self,userdata):
         self.tries+=1
-        if self.tries==3:
+        print(self.tries,'out of 5')
+        if self.tries==5:
             self.tries=0 
-            return'tries'
+            return 'tries'
         arm.set_joint_value_target(arm_ready_to_place)
         arm.go()
         wb = whole_body.get_current_joint_values()
@@ -472,19 +555,32 @@ class Scan_table(smach.State):
             self.tries=0 
             return'tries'
         global cents, rot, trans
-        self.tries+=1
 
         goal_x , goal_y, goal_yaw = kl_table1
-        move_base_goal(goal_x+.1*self.tries, goal_y , goal_yaw)      
+        move_base_goal(goal_x+.25*self.tries, goal_y , goal_yaw)      
         head_val = head.get_current_joint_values()
         head_val[0] = np.deg2rad(0)
         head_val[1] = np.deg2rad(-45)        
         succ = head.go(head_val)
+        rospy.sleep(.2)
         
         trans, rot = listener.lookupTransform('/map', '/head_rgbd_sensor_gazebo_frame', rospy.Time(0))
         euler = tf.transformations.euler_from_quaternion(rot)        
-        cents = segment_table()                                    
+        cents = segment_table()
         if len (cents)==0:
+            cents = segment_table2(0)
+            if len (cents)==0:
+                cents = segment_table2(1)
+                if len (cents)==0:
+                    cents = segment_table2(2)
+
+            
+                                            
+        if len (cents)==0:
+            arm.set_named_target('go')
+            arm.go()
+            head.set_named_target('neutral')
+            head.go()
             return 'failed'
         else:
             print ('static tfs published')
@@ -503,23 +599,25 @@ class Scan_table2(smach.State):
             return'tries'
     
         global cents, rot, trans
-        self.tries+=1
+       
         goal_x , goal_y, goal_yaw = kl_table2
-        succ = move_base_goal(goal_x, goal_y , goal_yaw)      
+        succ = move_base_goal(goal_x+.1*self.tries, goal_y , goal_yaw)      
         head_val = head.get_current_joint_values()
         head_val[0] = np.deg2rad(0)
-        head_val[1] = np.deg2rad(-45)        
+        head_val[1] = np.deg2rad(-30)        
         head.go(head_val)
         
         trans, rot = listener.lookupTransform('/map', '/head_rgbd_sensor_gazebo_frame', rospy.Time(0))
         euler = tf.transformations.euler_from_quaternion(rot)        
-        cents = segment_table()                                    
-        static_tf_publish(cents)
-        print("cents  wrt head" +str(cents))
-        if succ:
+        cents = segment_table2(self.tries)
+        if (len (cents) ==0):
+            return 'failed'                                          
+        else:
+            static_tf_publish(cents)
+            print("cents  wrt head" +str(cents))
             self.tries=0
             return 'succ'
-        return'failed'
+        
 
 
 ##### Define state PRE_TABLE #####
@@ -545,6 +643,7 @@ class Pre_table(smach.State):
             trans_cents.append(trans_map)
         
         print("centroids wrt map" + str(trans_cents))
+       
         if len(trans_cents) !=0:
 
             np.linalg.norm(np.asarray(trans_cents) - trans , axis = 1)
@@ -556,7 +655,7 @@ class Pre_table(smach.State):
             return 'failed'
         head_val = head.get_current_joint_values()
         head_val[0] = np.deg2rad(0)
-        head_val[1] = np.deg2rad(-35)
+        head_val[1] = np.deg2rad(-45)
         head.go(head_val)
         cents = segment_table()
         static_tf_publish(cents)
@@ -569,6 +668,55 @@ class Pre_table(smach.State):
             return 'succ'
         else:
             return 'failed'
+class Pre_table2(smach.State):
+    def __init__(self):
+        smach.State.__init__(self,outcomes=['succ','failed','tries'])
+        self.tries=0
+    def execute(self,userdata):
+        self.tries+=1
+        if self.tries==3:
+            self.tries=0 
+            return'tries'
+    
+        global closest_cent 
+        global cents              
+    
+        trans, rot = listener.lookupTransform('/map', '/head_rgbd_sensor_gazebo_frame', rospy.Time(0))
+        euler = tf.transformations.euler_from_quaternion(rot)
+        print("centroids wrt head " +str(cents))
+        publish_scene()
+        cents= segment_table2(2)
+        trans_cents = []        
+        for i, cent in enumerate(cents):
+            trans_map, _ = listener.lookupTransform('/map', 'static' + str(i), rospy.Time(0))
+            trans_cents.append(trans_map)
+        
+        print("centroids wrt map" + str(trans_cents))
+        if trans_cents[0]> .3:
+            print('not part of table 2')
+        if len(trans_cents) !=0:
+
+            np.linalg.norm(np.asarray(trans_cents) - trans , axis = 1)
+            closest_cent = np.argmin(np.linalg.norm(np.asarray(trans_cents) - trans , axis = 1))
+            print("Closest Cent " + str(closest_cent))
+            publish_scene()
+            
+            move_hand(1)
+            arm.set_joint_value_target(arm_grasp_table)
+            succ=arm.go()
+            if succ:
+                return 'succ'
+            else:
+                return 'failed'
+
+            
+        else: 
+            print("no object found")
+            return 'failed'
+        
+        
+        
+        
         
         
                      
@@ -583,21 +731,29 @@ class Grasp_table(smach.State):
         self.tries=0
     def execute(self,userdata):
         self.tries+=1
-        if self.tries==3:
+        if self.tries==5:
             self.tries=0 
             return'tries'
         
 
         trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static'+str(closest_cent), rospy.Time(0))        
         wb = whole_body.get_current_joint_values()
-        wb[0] += trans_hand[2] - 0.07
+        wb[0] += trans_hand[2] - 0.15
         wb[1] += trans_hand[1]
-        wb[3] += trans_hand[0]+0.1
+        wb[3] += trans_hand[0]+0.15
         whole_body.go(wb)
         trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static'+str(closest_cent), rospy.Time(0))
         scene.remove_world_object()
         wb = whole_body.get_current_joint_values()
-        wb[0] += trans_hand[2] - 0.05
+        wb[0] += trans_hand[2] - 0.06
+        wb[1] += trans_hand[1]
+        wb[3] += trans_hand[0]+.07
+        succ = whole_body.go(wb)
+        
+        trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static'+str(closest_cent), rospy.Time(0))
+        scene.remove_world_object()
+        wb = whole_body.get_current_joint_values()
+        wb[0] += trans_hand[2] - 0.06
         wb[1] += trans_hand[1]
         wb[3] += trans_hand[0]
         succ = whole_body.go(wb)
@@ -610,27 +766,34 @@ class Grasp_table(smach.State):
 
 
 ##### Define state POST_TABLE #####
-class Post_table(Takeshi_states):
-    def takeshi_run(self):
+class Post_table(smach.State):
+    def __init__(self):
+        smach.State.__init__(self,outcomes=['succ','failed','tries'])
+        self.tries=0
+    def execute(self,userdata):
+        self.tries+=1
+        if self.tries==5:
+            self.tries=0 
+            return'tries'
         a = gripper.get_current_joint_values()
         if np.linalg.norm(a - np.asarray(grasped)) > (np.linalg.norm(a - np.asarray(ungrasped))):
             print ('grasp seems to have failed')
-            succ = False
+            return 'failed'
         else:
             print('assuming succesful grasp')
             wb = whole_body.get_current_joint_values()
             wb[0] += -0.2
             wb[3] += 0.2
             whole_body.set_joint_value_target(wb)
-            succ = whole_body.go()
-        
-        publish_scene()
-        #Takeshi neutral
-        arm.set_named_target('go')
-        arm.go()
-        head.set_named_target('neutral')
-        head.go()
-        return succ
+            whole_body.go()
+            
+            publish_scene()
+            #Takeshi neutral
+            arm.set_named_target('go')
+            arm.go()
+            head.set_named_target('neutral')
+            head.go()
+            return 'succ'
 
 class Pre_table2(smach.State):
     def __init__(self):
@@ -662,29 +825,21 @@ class Pre_table2(smach.State):
         else: 
             print("no object found")
             return 'failed'
+        move_hand(1)
         arm.set_joint_value_target(arm_grasp_table)
         succ=arm.go()
         if succ:
-            return 'succ'
+           return 'succ'
+
         else:
             return 'failed'
         
         
                      
         
-        head_val = head.get_current_joint_values()
-        head_val[0] = np.deg2rad(0)
-        head_val[1] = np.deg2rad(-35)
-        head.go(head_val)
-        cents = segment_table()
-        static_tf_publish(cents)
-        publish_scene()
-        
-        move_hand(1)
-        arm.set_joint_value_target(arm_grasp_table)
-        arm.go()
+       
 
-        return succ
+
 
 
         
@@ -717,12 +872,12 @@ if __name__== '__main__':
         smach.StateMachine.add('GRASP_FLOOR',   Grasp_floor(),  transitions = {'failed':'SCAN_TABLE',  'succ': 'POST_FLOOR',   'tries':'INITIAL'}) 
         smach.StateMachine.add('POST_FLOOR',    Post_floor(),   transitions = {'failed':'GRASP_FLOOR',  'succ': 'GO_BOX',       'tries':'SCAN_FLOOR'}) 
         smach.StateMachine.add('GO_BOX',        Go_box(),       transitions = {'failed':'GO_BOX',       'succ': 'DELIVER',      'tries':'INITIAL'})
-        smach.StateMachine.add('DELIVER',       Deliver(),      transitions = {'failed':'DELIVER',      'succ': 'SCAN_FLOOR', 'tries':'INITIAL'})
+        smach.StateMachine.add('DELIVER',       Deliver(),      transitions = {'failed':'DELIVER',      'succ': 'SCAN_FLOOR', 'tries':'GO_BOX'})
         smach.StateMachine.add("SCAN_TABLE",    Scan_table(),   transitions = {'failed':'SCAN_TABLE',   'succ':'PRE_TABLE',     'tries':'SCAN_TABLE2'}) 
         smach.StateMachine.add("SCAN_TABLE2",   Scan_table2(),   transitions = {'failed':'SCAN_TABLE2',   'succ':'PRE_TABLE2',     'tries':'INITIAL'}) 
         smach.StateMachine.add('PRE_TABLE',     Pre_table(),    transitions = {'failed':'PRE_TABLE',    'succ': 'GRASP_TABLE',  'tries':'SCAN_TABLE2'}) 
-        smach.StateMachine.add('GRASP_TABLE',   Grasp_table(),  transitions = {'failed':'GRASP_TABLE',  'succ': 'POST_TABLE',   'tries':'INITIAL'}) 
-        smach.StateMachine.add('POST_TABLE',    Post_table(),   transitions = {'failed':'PRE_TABLE',  'succ': 'GO_BOX',       'tries':'INITIAL'}) 
+        smach.StateMachine.add('GRASP_TABLE',   Grasp_table(),  transitions = {'failed':'GRASP_TABLE',  'succ': 'POST_TABLE',   'tries':'SCAN_TABLE2'}) 
+        smach.StateMachine.add('POST_TABLE',    Post_table(),   transitions = {'failed':'PRE_TABLE2',  'succ': 'GO_BOX',       'tries':'INITIAL'}) 
         smach.StateMachine.add('PRE_TABLE2',    Pre_table2(),    transitions = {'failed':'PRE_TABLE2',    'succ': 'GRASP_TABLE',  'tries':'INITIAL'}) 
         
 
