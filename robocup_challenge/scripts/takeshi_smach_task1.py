@@ -177,7 +177,7 @@ def segment_table2(chan):
             cv2.putText(img, "centroid_"+str(i)+"_"+str(cX)+','+str(cY)    ,    (cX - 25, cY - 25)   ,cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2)
             print ('cX,cY',cX,cY)
     cents=np.asarray(cents)
-    plt.imshow(img )
+    #plt.imshow(img )
     return (cents)
 def segment_table():
     image_data=rgbd.get_image()
@@ -223,7 +223,7 @@ def segment_table():
             cv2.putText(img, "centroid_"+str(i)+"_"+str(cX)+','+str(cY)    ,    (cX - 25, cY - 25)   ,cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2)
             print ('cX,cY',cX,cY)
     cents=np.asarray(cents)
-    plt.imshow(img )
+    #plt.imshow(img )
     return (cents)
 
 ########## Clases derived from Takeshi_states, please only define takeshi_run() ##########
