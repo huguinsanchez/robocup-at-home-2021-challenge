@@ -4,7 +4,7 @@ from utils import *
 import moveit_msgs.msg
 
 import smach
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 
 ##### Publishers #####
