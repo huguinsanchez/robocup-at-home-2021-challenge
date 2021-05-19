@@ -177,7 +177,7 @@ def segment_table2(chan):
             cv2.putText(img, "centroid_"+str(i)+"_"+str(cX)+','+str(cY)    ,    (cX - 25, cY - 25)   ,cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2)
             print ('cX,cY',cX,cY)
     cents=np.asarray(cents)
-    #plt.imshow(img )
+    
     return (cents)
 def segment_table():
     image_data=rgbd.get_image()
@@ -223,7 +223,6 @@ def segment_table():
             cv2.putText(img, "centroid_"+str(i)+"_"+str(cX)+','+str(cY)    ,    (cX - 25, cY - 25)   ,cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2)
             print ('cX,cY',cX,cY)
     cents=np.asarray(cents)
-    #plt.imshow(img )
     return (cents)
 
 ########## Clases derived from Takeshi_states, please only define takeshi_run() ##########
@@ -284,16 +283,18 @@ class scan_mess(smach.State):
             return 'succ'
         else:
             print('failed')
-            tries+=1
+            self.tries+=1
             if tries == 6:
                 return self.tries
             else:
                 return 'failed'
 
 
+
+
 class Scan_floor(smach.State):
     def __init__(self):
-        smach.State.__init__(self,outcomes=['succ','failed','tries'])
+        smach.State.__init__(self,outcomes=['succ','failed','tries','change'])
         self.tries=0
     def execute(self,userdata):
         self.tries+=1
@@ -326,7 +327,7 @@ class Scan_floor(smach.State):
 #Baja el brazo al suelo, abre la garra y se acerca al objeto para grasp
 class Pre_floor(smach.State):
     def __init__(self):
-        smach.State.__init__(self,outcomes=['succ','failed','tries'])
+        smach.State.__init__(self,outcomes=['succ','failed','tries'],input_keys=['counter_in'],output_keys=['counter_out'])
         self.tries=0
     def execute(self,userdata):
         self.tries+=1
@@ -355,7 +356,17 @@ class Pre_floor(smach.State):
         closest_cent = np.argmin(np.linalg.norm(np.asarray(trans_cents) - trans , axis = 1))
         xyz=np.asarray(trans_cents[closest_cent])
         print (xyz)
-        if  (xyz[0] < 0.3) and (xyz[0]  >1.8):
+        if  (xyz[0] < 0.8):
+            print('HARDCODE AVOID CUADROTE')
+            arm.set_named_target('go')
+            arm.go()
+            head.set_named_target('neutral')
+            head.go()             
+            self.tries ==5
+            return 'tries'
+        print('risk it in 2',userdata.counter_in)
+        
+        if  (xyz[0] < 0.35) and (xyz[0]  >1.8):
             print ('Path to table clear,,, try first ')
             arm.set_named_target('go')
             arm.go()
@@ -363,7 +374,8 @@ class Pre_floor(smach.State):
             head.go()             
             self.tries ==5
             return 'tries'
-        if  (xyz[1] > 1.55):  #<
+        
+        if  (xyz[1] > 1.55) and userdata.counter_in < 2  :  #<
             print ('Too risky try table first ')
             arm.set_named_target('go')
             arm.go()
@@ -378,8 +390,11 @@ class Pre_floor(smach.State):
         trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static' + str(closest_cent), rospy.Time(0))
         wb = whole_body.get_current_joint_values()
         wb[0] += trans_hand[2] -0.1
-        wb[1] += trans_hand[1]
-        succ = whole_body.go(wb)
+        wb[1] += trans_hand[1]-.05
+        try:
+            succ = whole_body.go(wb)
+        except MoveItCommanderException:
+            return  'failed'
         trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static' + str(closest_cent), rospy.Time(0))
         wb = whole_body.get_current_joint_values()
         wb[0] += trans_hand[2] -0.05
@@ -487,12 +502,12 @@ class Go_box(smach.State):
             return 'tries'
         goal_x, goal_y, goal_yaw =  kl_tray #Known location tray 1
         a = gripper.get_current_joint_values()
-        if np.linalg.norm(a - np.asarray(grasped)) > (np.linalg.norm(a - np.asarray(ungrasped))):
-            print ('object might have fallen')
-            return'tries'
+        #if np.linalg.norm(a - np.asarray(grasped)) > (np.linalg.norm(a - np.asarray(ungrasped))):
+        #    print ('object might have fallen')
+        #    return'tries'
 
 
-        succ = move_base_goal(goal_x, goal_y+0.3 , -90)
+        succ = move_base_goal(goal_x, goal_y+0.35 , -90)
         publish_scene()
         if succ:
             return 'succ'
@@ -506,24 +521,67 @@ class Deliver(smach.State):
         smach.State.__init__(self,outcomes=['succ','failed','tries'])
         self.tries=0
     def execute(self,userdata):
+        
+       
         self.tries+=1
         print(self.tries,'out of 5')
         if self.tries==5:
             self.tries=0 
             return 'tries'
+       
+
+        arm.set_joint_value_target(arm_ready_to_place)
+        arm.go()
+
+        trans_hand, rot_hand = listener.lookupTransform('Box1','/hand_palm_link', rospy.Time(0))
+        print ('hand wrt box1',trans_hand)
         arm.set_joint_value_target(arm_ready_to_place)
         arm.go()
         wb = whole_body.get_current_joint_values()
-        wb[0] += -0.45
-        wb[4] += -.3
-        whole_body.set_joint_value_target(wb)
-        succ=whole_body.go()
+        wb[0] += -trans_hand[1]
+        wb[1] += -trans_hand[0]
+        try:
+            succ = whole_body.go(wb)
+        except MoveItCommanderException:
+            return  'failed'
+        trans_hand, rot_hand = listener.lookupTransform('Box1','/hand_palm_link', rospy.Time(0))
+        wb = whole_body.get_current_joint_values()
+        wb[0] += -trans_hand[1]
+        wb[1] += -trans_hand[0]
+        
+        try:
+            succ = whole_body.go(wb)
+        except MoveItCommanderException:
+            return  'failed'
+        trans_hand, rot_hand = listener.lookupTransform('Box1','/hand_palm_link', rospy.Time(0))
+        print ('hand wrt box1',trans_hand)
+        move_hand(1)
+        """wb = whole_body.get_current_joint_values()
+                                wb[0] += trans_hand[2]
+                                wb[1] += trans_hand[1]
+                                try:
+                                    succ = whole_body.go(wb)
+                                except MoveItCommanderException:
+                                    return  'failed'
+                        
+                                
+                                succ = whole_body.go(wb)
+                                trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'Box1', rospy.Time(0))
+                                print ('hand wrt box1',trans_hand)
+                                wb = whole_body.get_current_joint_values()
+                                wb[0] += -trans_hand[2]
+                                wb[1] += -trans_hand[1]
+                                try:
+                                    succ = whole_body.go(wb)
+                                except MoveItCommanderException:
+                                    return  'failed'"""
+            
+        
         move_hand(1)
         
         if succ:
             wb = whole_body.get_current_joint_values()
             wb[0] += 0.45
-            wb[4] += .3
             whole_body.set_joint_value_target(wb)
             succ=whole_body.go()
             move_hand(0)
@@ -545,14 +603,16 @@ class Deliver(smach.State):
 ##### Define state SCAN_TABLE #####
 class Scan_table(smach.State):
     def __init__(self):
-        smach.State.__init__(self,outcomes=['succ','failed','tries'])
+        smach.State.__init__(self,outcomes=['succ','failed','tries'],input_keys=['counter_in'],output_keys=['counter_out'])
         self.tries=0
     def execute(self,userdata):
         self.tries+=1
-        if self.tries==5:
+        if self.tries==3:
             self.tries=0 
             return'tries'
         global cents, rot, trans
+        print(userdata.counter_in)
+        userdata.counter_out=userdata.counter_in +1
 
         goal_x , goal_y, goal_yaw = kl_table1
         move_base_goal(goal_x+.25*self.tries, goal_y , goal_yaw)      
@@ -566,12 +626,8 @@ class Scan_table(smach.State):
         euler = tf.transformations.euler_from_quaternion(rot)        
         cents = segment_table()
         if len (cents)==0:
-            cents = segment_table2(0)
-            if len (cents)==0:
-                cents = segment_table2(1)
-                if len (cents)==0:
-                    cents = segment_table2(2)
-
+            cents = segment_table2(2)
+            
             
                                             
         if len (cents)==0:
@@ -621,7 +677,7 @@ class Scan_table2(smach.State):
 ##### Define state PRE_TABLE #####
 class Pre_table(smach.State):
     def __init__(self):
-        smach.State.__init__(self,outcomes=['succ','failed','tries'])
+        smach.State.__init__(self,outcomes=['succ','failed','tries'],input_keys=['global_counter'])
         self.tries=0
     def execute(self,userdata):
         self.tries+=1
@@ -720,7 +776,8 @@ class Pre_table2(smach.State):
                      
         
        
-  
+
+     
 #Define state GRASP_TABLE
 class Grasp_table(smach.State):
     def __init__(self):
@@ -834,7 +891,14 @@ class Pre_table2(smach.State):
         
                      
         
-    
+       
+
+
+
+
+        
+
+
 #Initialize global variables and node
 def init(node_name):
     global listener, broadcaster, tfBuffer, tf_static_broadcaster, scene, rgbd    
@@ -846,6 +910,21 @@ def init(node_name):
     whole_body.set_workspace([-6.0, -6.0, 6.0, 6.0]) 
     scene = moveit_commander.PlanningSceneInterface()
     rgbd = RGBD()
+    static_transformStamped = TransformStamped()
+
+    ##FIXING TF TO MAP ( ODOM REALLY)    
+    static_transformStamped.header.stamp = rospy.Time.now()
+    static_transformStamped.header.frame_id = "map"
+    static_transformStamped.child_frame_id = "Box1" 
+    static_transformStamped.transform.translation.x = 2.4
+    static_transformStamped.transform.translation.y = -0.6
+    static_transformStamped.transform.translation.z = .5
+    static_transformStamped.transform.rotation.x = 0    
+    static_transformStamped.transform.rotation.y = 0    
+    static_transformStamped.transform.rotation.z = 0    
+    static_transformStamped.transform.rotation.w = 1    
+
+    tf_static_broadcaster.sendTransform(static_transformStamped)
 
 #Entry point    
 if __name__== '__main__':
@@ -857,18 +936,25 @@ if __name__== '__main__':
     with sm:
         #State machine for grasping on Floor
         smach.StateMachine.add("INITIAL",       Initial(),      transitions = {'failed':'INITIAL',      'succ':'SCAN_FLOOR',    'tries':'INITIAL'}) 
-        smach.StateMachine.add("SCAN_FLOOR",    Scan_floor(),   transitions = {'failed':'SCAN_FLOOR',   'succ':'PRE_FLOOR',     'tries':'SCAN_TABLE'}) 
-        smach.StateMachine.add('PRE_FLOOR',     Pre_floor(),    transitions = {'failed':'PRE_FLOOR',    'succ': 'GRASP_FLOOR',  'tries':'SCAN_TABLE'}) 
+        smach.StateMachine.add("SCAN_FLOOR",    Scan_floor(),   transitions = {'failed':'SCAN_FLOOR',   'succ':'PRE_FLOOR',     'tries':'SCAN_TABLE','change':'SCAN_TABLE2'}) 
+        smach.StateMachine.add('PRE_FLOOR',     Pre_floor(),    transitions = {'failed':'PRE_FLOOR',    'succ': 'GRASP_FLOOR',  'tries':'SCAN_TABLE'},remapping={'counter_in':'sm_counter','counter_out':'sm_counter'}) 
         smach.StateMachine.add('GRASP_FLOOR',   Grasp_floor(),  transitions = {'failed':'SCAN_TABLE',  'succ': 'POST_FLOOR',   'tries':'INITIAL'}) 
         smach.StateMachine.add('POST_FLOOR',    Post_floor(),   transitions = {'failed':'GRASP_FLOOR',  'succ': 'GO_BOX',       'tries':'SCAN_FLOOR'}) 
         smach.StateMachine.add('GO_BOX',        Go_box(),       transitions = {'failed':'GO_BOX',       'succ': 'DELIVER',      'tries':'INITIAL'})
         smach.StateMachine.add('DELIVER',       Deliver(),      transitions = {'failed':'DELIVER',      'succ': 'SCAN_FLOOR', 'tries':'GO_BOX'})
-        smach.StateMachine.add("SCAN_TABLE",    Scan_table(),   transitions = {'failed':'SCAN_TABLE',   'succ':'PRE_TABLE',     'tries':'SCAN_TABLE2'}) 
+        smach.StateMachine.add("SCAN_TABLE",    Scan_table(),   transitions = {'failed':'SCAN_TABLE',   'succ':'PRE_TABLE',     'tries':'SCAN_TABLE2'},remapping={'counter_in':'sm_counter','counter_out':'sm_counter'})
         smach.StateMachine.add("SCAN_TABLE2",   Scan_table2(),   transitions = {'failed':'SCAN_TABLE2',   'succ':'PRE_TABLE2',     'tries':'INITIAL'}) 
         smach.StateMachine.add('PRE_TABLE',     Pre_table(),    transitions = {'failed':'PRE_TABLE',    'succ': 'GRASP_TABLE',  'tries':'SCAN_TABLE2'}) 
         smach.StateMachine.add('GRASP_TABLE',   Grasp_table(),  transitions = {'failed':'GRASP_TABLE',  'succ': 'POST_TABLE',   'tries':'SCAN_TABLE2'}) 
         smach.StateMachine.add('POST_TABLE',    Post_table(),   transitions = {'failed':'PRE_TABLE2',  'succ': 'GO_BOX',       'tries':'INITIAL'}) 
         smach.StateMachine.add('PRE_TABLE2',    Pre_table2(),    transitions = {'failed':'PRE_TABLE2',    'succ': 'GRASP_TABLE',  'tries':'INITIAL'}) 
+        
+
+        
+
+      
+
+    outcome = sm.execute()
 
 
-    outcome = sm.execute()   
+    
