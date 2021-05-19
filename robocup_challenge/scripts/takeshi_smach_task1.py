@@ -288,10 +288,7 @@ class scan_mess(smach.State):
                 return self.tries
             else:
                 return 'failed'
-
-
-
-
+                
 class Scan_floor(smach.State):
     def __init__(self):
         smach.State.__init__(self,outcomes=['succ','failed','tries','change'])
