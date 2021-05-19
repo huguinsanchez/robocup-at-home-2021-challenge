@@ -288,7 +288,10 @@ class scan_mess(smach.State):
                 return self.tries
             else:
                 return 'failed'
-                
+
+
+
+
 class Scan_floor(smach.State):
     def __init__(self):
         smach.State.__init__(self,outcomes=['succ','failed','tries','change'])
@@ -353,33 +356,31 @@ class Pre_floor(smach.State):
         closest_cent = np.argmin(np.linalg.norm(np.asarray(trans_cents) - trans , axis = 1))
         xyz=np.asarray(trans_cents[closest_cent])
         print (xyz)
-        if  (xyz[0] < 0.8):
-            print('HARDCODE AVOID CUADROTE')
-            arm.set_named_target('go')
-            arm.go()
-            head.set_named_target('neutral')
-            head.go()             
-            self.tries ==5
-            return 'tries'
-        print('risk it in 2',userdata.counter_in)
         
-        if  (xyz[0] < 0.35) and (xyz[0]  >1.8):
-            print ('Path to table clear,,, try first ')
-            arm.set_named_target('go')
-            arm.go()
-            head.set_named_target('neutral')
-            head.go()             
-            self.tries ==5
-            return 'tries'
+        print('risk it in 5',userdata.counter_in)
         
-        if  (xyz[1] > 1.55) and userdata.counter_in < 2  :  #<
-            print ('Too risky try table first ')
-            arm.set_named_target('go')
-            arm.go()
-            head.set_named_target('neutral')
-            head.go()             
-            self.tries ==5
-            return 'tries'
+        if(userdata.counter_in > 5):
+            print ("YOOOLOOOOOOOOOOO (not the algorithm")
+        else:
+
+
+            if  (xyz[0] < 0.35) and (xyz[0]  >1.8):
+                print ('Path to table clear,,, try first ')
+                arm.set_named_target('go')
+                arm.go()
+                head.set_named_target('neutral')
+                head.go()             
+                self.tries ==5
+                return 'tries'
+            
+            if  (xyz[1] > 1.55) and userdata.counter_in < 2  :  #<
+                print ('Too risky try table first ')
+                arm.set_named_target('go')
+                arm.go()
+                head.set_named_target('neutral')
+                head.go()             
+                self.tries ==5
+                return 'tries'
 
 
 
@@ -507,6 +508,7 @@ class Go_box(smach.State):
         succ = move_base_goal(goal_x, goal_y+0.35 , -90)
         publish_scene()
         if succ:
+            self.tries=0 
             return 'succ'
         return 'failed'
         
@@ -837,7 +839,7 @@ class Post_table(smach.State):
             wb[3] += 0.2
             whole_body.set_joint_value_target(wb)
             whole_body.go()
-            
+            self.tries=0 
             publish_scene()
             #Takeshi neutral
             arm.set_named_target('go')

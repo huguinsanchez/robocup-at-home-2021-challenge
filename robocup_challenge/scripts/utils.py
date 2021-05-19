@@ -17,6 +17,7 @@ import time
 from geometry_msgs.msg import PoseStamped, Quaternion, TransformStamped, Twist
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from sensor_msgs.msg import LaserScan, PointCloud2
+from std_msgs.msg import String
 
 
 # 速度指令のパブリッシャーを作成
@@ -405,3 +406,19 @@ class RGBD():
     def set_coordinate_name(self, name):
         u"""座標の名前を設定する関数"""
         self._frame_name = name
+
+
+class Message():
+    u"""bkj"""
+
+    def __init__(self):
+        self._msg_sub = rospy.Subscriber('/message1', String, self._msg_callback)
+        self._msg_data = None
+
+    def _msg_callback(self, msg):
+        
+        self._msg_data = msg
+
+    def get_data(self):
+        u"""画像を取得する関数"""
+        return self._msg_data
