@@ -11,15 +11,15 @@ install(PROGRAMS
   #scripts/move.py
   #scripts/utils_takeshi.py
   #scripts/takeshi_smach_task1.py
-  pumas_navigation/act_pln/scripts/utils.py
-  pumas_navigation/act_pln/scripts/utils_takeshi.py
-  pumas_navigation/act_pln/scripts/takeshi_smach_go_get_it.py
+  #pumas_navigation/act_pln/scripts/utils.py
+  #pumas_navigation/act_pln/scripts/utils_takeshi.py
+  #pumas_navigation/act_pln/scripts/takeshi_smach_go_get_it.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 install(DIRECTORY
   #launch
   #pumas_navigation/navigation_start/launch
-  pumas_navigation
+  #pumas_navigation
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
