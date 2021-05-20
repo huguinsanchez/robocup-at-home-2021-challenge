@@ -19,6 +19,7 @@ RUN source /opt/ros/$ROS_DISTRO/setup.bash && \
     cd /bio_ik_ws/src && \
     catkin_init_workspace && \
     git clone --depth=1 https://github.com/TAMS-Group/bio_ik.git && \
+	git clone https://github.com/huguinsanchez/pumas_navigation.git && \
     cd .. && \
     catkin_make install -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/ros/$ROS_DISTRO -DCATKIN_ENABLE_TESTING=0 && \
     cd / && rm -r /bio_ik_ws
@@ -30,11 +31,12 @@ RUN mkdir -p /workspace/src
 ADD . /workspace/src
 
 # install dependencies defined in package.xml
-RUN cd /workspace && /ros_entrypoint.sh rosdep install --from-paths src -r -y
+RUN cd /workspace && /ros_entrypoint.sh rosdep install --from-paths src --ignore-src -r -y
 
 # compile and install our algorithm
 RUN cd /workspace && /ros_entrypoint.sh catkin_make install -DCMAKE_INSTALL_PREFIX=/opt/ros/$ROS_DISTRO
 
 # command to run the algorithm
-CMD	roslaunch navigation_start navigation_OSS.launch 
+CMD	roslaunch robocup_challenge navigation_OSS.launch
+
 
