@@ -41,3 +41,4 @@ CMD	./workspace/src/env.sh roslaunch navigation_start navigation_OSS.launch
 #CMD ./workspace/src/env.sh (roslaunch navigation_start navigation_OSS.launch &) && (rosrun act_pln takeshi_smach_go_get_it.py)
 
 
+
