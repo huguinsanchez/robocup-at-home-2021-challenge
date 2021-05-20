@@ -38,6 +38,4 @@ RUN cd /workspace && /ros_entrypoint.sh catkin_make install -DCMAKE_INSTALL_PREF
 
 # command to run the algorithm
 CMD	roslaunch navigation_start navigation_OSS.launch 
-CMD rosrun act_pln takeshi_smach_go_get_it.py
-
 
