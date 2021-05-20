@@ -10,8 +10,7 @@ install(PROGRAMS
   scripts/utils.py
   scripts/move.py
   scripts/utils_takeshi.py
-  scripts/takeshi_smach_11.py
-  scripts/takeshi_smach_go_get_it.py
+  scripts/takeshi_smach_task1.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

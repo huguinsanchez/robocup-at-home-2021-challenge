@@ -2,8 +2,10 @@
 
 from utils import *
 import moveit_msgs.msg
-#from gazebo_ros import gazebo_interface
+
 import smach
+#import matplotlib.pyplot as plt
+
 
 ##### Publishers #####
 scene_pub = rospy.Publisher('planning_scene', moveit_msgs.msg.PlanningScene, queue_size = 5)
@@ -12,11 +14,14 @@ scene_pub = rospy.Publisher('planning_scene', moveit_msgs.msg.PlanningScene, que
 kl_mess1 = [1.04, 0.3, 90]
 kl_tray =  [2.318411366833172, 0.09283744344925589, -90]
 kl_box1 =  [-0.04168256822546347, 2.427268271720426, -90]
-kl_table = [1.04, 0.4, 90]
-kl_shelf = [2.08, 3.6, 90]
-kl_deliver = [0.6, 3.4, 180]
-#kl_l_deliver = []
-#kl_r_deliver = []
+kl_table1 = [1.04, 1.2, 90]
+kl_table2= [0 , 1.2,90]
+kl_shelf = [2.08, 3.6, 1.7]
+kl_deliver = [0.8, 3.4, 180]
+kl_l_deliver = [0.6, 3, 180]
+kl_r_deliver = [0.6, 4.2, 180]
+kl_door=[2.68,1.52, 1.7]
+
 
 ##### ARM #####
 arm_grasp_from_above = [0.19263830140116414,
@@ -55,12 +60,17 @@ arm_ready_to_place = [0.03999320441056991,
  -1.5269847787383313,
  -0.009753879176134461,
  0.0]
+<<<<<<< HEAD
 arm_grasp_shelf_hl = [0.3,
+=======
+arm_grasp_shelf_hl = [0.2,
+>>>>>>> df952a40441f4a2e15bf23396741cfa313065deb
  -0.4,
  0.0,
  -1.3,
  0.0,
  0.0]
+<<<<<<< HEAD
  #arm_ready_to_deliver = [0.03999320441056991,
 """ -0.4729690540086997,
  0.19361475012179108,
@@ -68,6 +78,14 @@ arm_grasp_shelf_hl = [0.3,
  -0.009753879176134461,
  0.0]"""
 
+=======
+arm_ready_to_deliver = [0.43999320441056991,
+ -0.4729690540086997,
+ 0.19361475012179108,
+ -1.5269847787383313,
+ -0.009753879176134461,
+ 0.0]
+>>>>>>> df952a40441f4a2e15bf23396741cfa313065deb
 
 ##### GRASP 
 ungrasped=[-0.00047048998088961014,
@@ -99,7 +117,7 @@ class Takeshi_states(smach.State):
     def execute(self, userdata):
         #rospy.loginfo('STATE : INITIAL')
         print("Excecuting Takeshi State: " + self.__class__.__name__)
-        print('Try', self.tries, 'of 5 attepmpts')
+        print('Try', self.tries, 'of 5 attempts')
         succ = self.takeshi_run()
         if succ: 
             print('success')            
