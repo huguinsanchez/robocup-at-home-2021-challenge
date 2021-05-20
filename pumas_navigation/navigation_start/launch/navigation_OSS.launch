@@ -81,5 +81,6 @@
     <node name="pred_arms_poses" pkg="knowledge" type="pred_poses_mani_node" respawn="true" output="screen" args="-f $(find knowledge)/manipulation/predef_poses/"/>
   </group>
 
+  <node name="task2" pkg="act_pln" type="takeshi_smach_go_get_it.py" respawn="true" output="screen"/>
 
 </launch>

@@ -37,4 +37,5 @@ RUN cd /workspace && /ros_entrypoint.sh rosdep install --from-paths src --ignore
 RUN cd /workspace && /ros_entrypoint.sh catkin_make install -DCMAKE_INSTALL_PREFIX=/opt/ros/$ROS_DISTRO
 
 # command to run the algorithm
-CMD	./workspace/src/env.sh roslaunch navigation_start navigation_OSS.launch && / rosrun act_pln takeshi_smach_go_get_it.py
+CMD	./workspace/src/env.sh roslaunch navigation_start navigation_OSS.launch
+#CMD ./workspace/src/env.sh (roslaunch navigation_start navigation_OSS.launch &) && (rosrun act_pln takeshi_smach_go_get_it.py)
