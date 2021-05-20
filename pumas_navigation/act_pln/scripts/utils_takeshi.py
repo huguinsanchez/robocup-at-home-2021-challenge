@@ -4,7 +4,6 @@ from utils import *
 import moveit_msgs.msg
 
 import smach
-import matplotlib.pyplot as plt
 
 
 ##### Publishers #####
@@ -16,7 +15,7 @@ kl_tray =  [2.318411366833172, 0.09283744344925589, -90]
 kl_box1 =  [-0.04168256822546347, 2.427268271720426, -90]
 kl_table1 = [1.04, 1.2, 90]
 kl_table2= [0 , 1.2,90]
-kl_shelf = [2.08, 3.6, 1.7]
+kl_shelf = [2.3, 4, 1.7]
 kl_deliver = [0.8, 3.4, 180]
 kl_l_deliver = [0.6, 3, 180]
 kl_r_deliver = [0.6, 4.2, 180]
