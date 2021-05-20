@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 from utils_takeshi import *
+from utils import *
+
 
 ########## Functions for takeshi states ##########
-def segment_floor():
+def segment_shelf():
     image_data = rgbd.get_image()
     points_data = rgbd.get_points()
 
@@ -169,32 +171,33 @@ class Initial(Takeshi_states):
         return succ
 
 
-##### Define state SCAN_FLOOR #####
-#Va al mess1 piso y voltea hacia abajo la cabeza y escanea el piso
-class Scan_floor(Takeshi_states):
+##### Define state SCAN_SHELF #####
+#Va al shelf, voltea  la cabeza y escanea el estante
+class Scan_shelf_hl(Takeshi_states):
     def takeshi_run(self):     
         global cents, rot, trans
-        goal_x , goal_y, goal_yaw = kl_mess1        
+        goal_x , goal_y, goal_yaw = kl_shelf        
         head_val = head.get_current_joint_values()
         head_val[0] = np.deg2rad(0)
-        head_val[1] = np.deg2rad(-45)        
+        head_val[1] = np.deg2rad(0)        
         head.go(head_val)
         succ = move_base_goal(goal_x, goal_y, goal_yaw)        
         trans, rot = listener.lookupTransform('/map', '/head_rgbd_sensor_gazebo_frame', rospy.Time(0))
         euler = tf.transformations.euler_from_quaternion(rot)
         #print(trans, euler)
-        cents = segment_floor()
+        cents = segment_shelf()
         static_tf_publish(cents)
         return succ
 
-##### Define state PRE_FLOOR #####
-#Baja el brazo al suelo, abre la garra y se acerca al objeto para grasp
-class Pre_floor(Takeshi_states):
+##### Define state PRE_GRASP_SHELF_HL #####
+#Acomoda el brazo, abre la garra y se acerca al objeto para grasp
+class Pre_grasp_shelf_hl(Takeshi_states):
     def takeshi_run(self):
-        global closest_cent
+        """global closest_cent
         move_hand(1)
         publish_scene()
-        arm.go(arm_grasp_floor)        
+        
+        arm.go(arm_grasp_shelf_hl)        
         trans_cents = []
         
         for i, cent in enumerate(cents):
@@ -205,108 +208,14 @@ class Pre_floor(Takeshi_states):
         closest_cent = np.argmin(np.linalg.norm(np.asarray(trans_cents) - trans , axis = 1))
         trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static' + str(closest_cent), rospy.Time(0))
         wb = whole_body.get_current_joint_values()
-        wb[0] += trans_hand[2] -0.1
+        wb[0] += trans_hand[2] - 0.1
         wb[1] += trans_hand[1]
         succ = whole_body.go(wb)
         return succ
 
-##### Define state GRASP_FLOOR #####
-#Se acerca mas al objeto y cierra la garra
-class Grasp_floor(Takeshi_states):
-    def takeshi_run(self):
-        global trans_hand
-        print(closest_cent)
-        trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static' + str(closest_cent), rospy.Time(0))
-        trans_hand, rot_hand
-        wb = whole_body.get_current_joint_values()
-        wb[0] += trans_hand[2] - 0.05
-        wb[1] += trans_hand[1]
-        succ = whole_body.go(wb)
-        trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static0', rospy.Time(0))
-        move_hand(0)
-        return succ
-
-
-##### Define state POST_FLOOR #####
-#Se hace para atras, verifica grasp y pone posicion neutral
-class Post_floor(Takeshi_states):
-    def takeshi_run(self):
-        a = gripper.get_current_joint_values()
-        if np.linalg.norm(a - np.asarray(grasped))  >  (np.linalg.norm(a - np.asarray(ungrasped))):
-            print ('grasp seems to have failed')
-            return False
-        else:
-            print('super primitive fgrasp detector points towards succesfull ')
-            wb = whole_body.get_current_joint_values()
-            wb[0] += trans_hand[2] - 0.3
-            succ = whole_body.go(wb)
-            #Takeshi neutral
-            arm.set_named_target('go')
-            arm.go()
-            head.set_named_target('neutral')
-            head.go()
-            return succ
-
-
-##### Define state GO_BOX #####
-#Se mueve hacia la caja baja el brazo y se acerca mas 
-class Go_box(Takeshi_states):
-    def takeshi_run(self):
-        goal_x, goal_y, goal_yaw =  kl_tray #Known location tray 1
-        succ = move_base_goal(goal_x, goal_y + 0.3, -90)
-        publish_scene()
-        return succ
-        
-
-##### Define state DELIVER #####
-#Suelta el objeto
-class Deliver(Takeshi_states):
-    def takeshi_run(self):
-        arm.set_joint_value_target(arm_ready_to_place)
-        arm.go()
-        wb = whole_body.get_current_joint_values()
-        wb[0] += -0.45
-        wb[4] += -.3
-        whole_body.set_joint_value_target(wb)
-        whole_body.go()
-        move_hand(1)
-        wb = whole_body.get_current_joint_values()
-        wb[0] += 0.3
-        whole_body.set_joint_value_target(wb)
-        succ = whole_body.go()
-        return succ
-
-
-
-
-
-
-#TABLE
-
-
-##### Define state SCAN_TABLE #####
-class Scan_table(Takeshi_states):
-    def takeshi_run(self):
-        global cents, rot, trans
-        goal_x , goal_y, goal_yaw = kl_mess1
-        head_val = head.get_current_joint_values()
-        head_val[0] = np.deg2rad(0)
-        head_val[1] = np.deg2rad(-45)        
-        head.go(head_val)
-        succ = move_base_goal(goal_x, goal_y + 0.99, goal_yaw)      
-        trans, rot = listener.lookupTransform('/map', '/head_rgbd_sensor_gazebo_frame', rospy.Time(0))
-        euler = tf.transformations.euler_from_quaternion(rot)        
-        cents = segment_table()                                    
-        static_tf_publish(cents)
-        print("Los cents " +str(cents))
-        return succ
-
-##### Define state PRE_TABLE #####
-class Pre_table(Takeshi_states):
-    def takeshi_run(self):
         global closest_cent 
         global cents              
-        goal_x , goal_y, goal_yaw = kl_mess1 
+        goal_x , goal_y, goal_yaw = kl_shelf 
         print("Los cents " +str(cents))
         publish_scene()
 
@@ -320,8 +229,6 @@ class Pre_table(Takeshi_states):
         np.linalg.norm(np.asarray(trans_cents) - trans , axis = 1)
         closest_cent = np.argmin(np.linalg.norm(np.asarray(trans_cents) - trans , axis = 1))
         print("Mas cerca " + str(closest_cent))
-        
-        
                      
         succ = move_base_goal(goal_x+0.5 ,goal_y+.99,goal_yaw)      ##FIJO??
 
@@ -338,66 +245,105 @@ class Pre_table(Takeshi_states):
         arm.set_joint_value_target(arm_grasp_table)
         arm.go()
 
-        return succ
+        return succ"""
+        return True
 
-     
-#Define state GRASP_TABLE
-class Grasp_table(Takeshi_states):
+##### Define state GRASP_SHELF_HL #####
+#Se acerca mas al objeto y cierra la garra
+class Grasp_shelf_hl(Takeshi_states):
     def takeshi_run(self):
-        trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static0', rospy.Time(0))
+        """global trans_hand
+        print(closest_cent)
+        trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static' + str(closest_cent), rospy.Time(0))
+        trans_hand, rot_hand
         wb = whole_body.get_current_joint_values()
-        wb[0] += trans_hand[2] - 0.07
+        wb[0] += trans_hand[2] - 0.05
         wb[1] += trans_hand[1]
-        wb[3] += trans_hand[0] + 0.1
-        whole_body.go(wb)
-        trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static0', rospy.Time(0))        
-        wb = whole_body.get_current_joint_values()
-        wb[0] += trans_hand[2] - 0.07
-        wb[1] += trans_hand[1]
-        wb[3] += trans_hand[0]
-        whole_body.go(wb)
-        trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static0', rospy.Time(0))
-        scene.remove_world_object()
-        wb = whole_body.get_current_joint_values()
-        wb[0] += trans_hand[2] - 0.07
-        wb[1] += trans_hand[1]
-        wb[3] += trans_hand[0]
         succ = whole_body.go(wb)
+        trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static0', rospy.Time(0))
         move_hand(0)
-        return succ
+        return succ"""
+        return True
 
 
-##### Define state POST_TABLE #####
-class Post_table(Takeshi_states):
+##### Define state POST_GRASP_SHELF_HL #####
+# Se hace para atras, verifica grasp y pone posicion neutral
+class Post_grasp_shelf_hl(Takeshi_states):
     def takeshi_run(self):
-        a = gripper.get_current_joint_values()
-        if np.linalg.norm(a - np.asarray(grasped)) > (np.linalg.norm(a - np.asarray(ungrasped))):
+        """a = gripper.get_current_joint_values()
+        if np.linalg.norm(a - np.asarray(grasped))  >  (np.linalg.norm(a - np.asarray(ungrasped))):
             print ('grasp seems to have failed')
-            succ = False
+            return False
         else:
-            print('assuming succesful grasp')
+            print('super primitive fgrasp detector points towards succesfull ')
             wb = whole_body.get_current_joint_values()
-            wb[0] += -0.2
-            wb[3] += 0.2
-            whole_body.set_joint_value_target(wb)
-            succ = whole_body.go()
-        
+            wb[0] += trans_hand[2] - 0.3
+            succ = whole_body.go(wb)
+            #Takeshi neutral
+            arm.set_named_target('go')
+            arm.go()
+            head.set_named_target('neutral')
+            head.go()
+            return succ"""
+        return True
+
+
+##### Define state GO_BOX #####
+# Se mueve hacia la posicion de entrega 
+class Go_deliver_center(Takeshi_states):
+    def takeshi_run(self):
+        goal_x, goal_y, goal_yaw =  kl_deliver #Known location friends
+        succ = move_base_goal(goal_x, goal_y - 0.1, 180)
         publish_scene()
-        #Takeshi neutral
-        arm.set_named_target('go')
-        arm.go()
-        head.set_named_target('neutral')
-        head.go()
         return succ
 
+class Listen_deliver_goal(Takeshi_states):
+    def takeshi_run(self):
+        self.msg = message.get_data()
+        rospy.loginfo("Delivering to the %s", self.msg)
+        self.whom = str(self.msg).split('"')
+        self.whom[1].strip('"')
+        rospy.loginfo("Delivering to the %s", self.whom[1])
+        if self.whom[1] == "left person":
+            print("Delivering object to left goal")
+            goal_x, goal_y, goal_yaw =  kl_deliver #Known location friends_left
+            succ = move_base_goal(goal_x, goal_y - 0.1, 180)
+            publish_scene()
+            return succ
+        else:
+            if self.whom[1] == "right person":
+                print("Delivering object to right goal")
+                goal_x, goal_y, goal_yaw =  kl_deliver #Known location friends_right
+                succ = move_base_goal(goal_x, goal_y - 0.1, 180)
+                publish_scene()
+                return succ
+            else: 
+                print("I don't know to whom should I deliver the object")
 
-        
 
+##### Define state DELIVER #####
+# Suelta el objeto
+class Deliver(Takeshi_states):
+    def takeshi_run(self):
+        arm.set_joint_value_target(arm_ready_to_place)
+        arm.go()
+        wb = whole_body.get_current_joint_values()
+        wb[0] += -0.45
+        #wb[4] += -0.3
+        whole_body.set_joint_value_target(wb)
+        whole_body.go()
+        move_hand(1)
+        wb = whole_body.get_current_joint_values()
+        wb[0] += 0.3
+        whole_body.set_joint_value_target(wb)
+        succ = whole_body.go()
+        return succ
 
 #Initialize global variables and node
 def init(node_name):
-    global listener, broadcaster, tfBuffer, tf_static_broadcaster, scene, rgbd    
+    global listener, broadcaster, tfBuffer, tf_static_broadcaster, scene, rgbd, message    
     rospy.init_node(node_name)
+
     listener = tf.TransformListener()
     broadcaster = tf.TransformBroadcaster()
     tfBuffer = tf2_ros.Buffer()
@@ -405,6 +351,7 @@ def init(node_name):
     whole_body.set_workspace([-6.0, -6.0, 6.0, 6.0]) 
     scene = moveit_commander.PlanningSceneInterface()
     rgbd = RGBD()
+    message = Message()
 
 #Entry point    
 if __name__== '__main__':
@@ -414,25 +361,15 @@ if __name__== '__main__':
     sm.userdata.sm_counter = 0
 
     with sm:
-        #State machine for grasping on Floor
-        """smach.StateMachine.add("INITIAL",       Initial(),      transitions = {'failed':'INITIAL',      'succ':'SCAN_FLOOR',    'tries':'END'}) 
-        smach.StateMachine.add("SCAN_FLOOR",    Scan_floor(),   transitions = {'failed':'SCAN_FLOOR',   'succ':'PRE_FLOOR',     'tries':'END'}) 
-        smach.StateMachine.add('PRE_FLOOR',     Pre_floor(),    transitions = {'failed':'PRE_FLOOR',    'succ': 'GRASP_FLOOR',  'tries':'END'}) 
-        smach.StateMachine.add('GRASP_FLOOR',   Grasp_floor(),  transitions = {'failed':'GRASP_FLOOR',  'succ': 'POST_FLOOR',   'tries':'END'}) 
-        smach.StateMachine.add('POST_FLOOR',    Post_floor(),   transitions = {'failed':'INITIAL',      'succ': 'GO_BOX',       'tries':'END'}) 
-        smach.StateMachine.add('GO_BOX',        Go_box(),       transitions = {'failed':'GO_BOX',       'succ': 'DELIVER',      'tries':'END'})
-        smach.StateMachine.add('DELIVER',       Deliver(),      transitions = {'failed':'DELIVER',      'succ': 'INITIAL',      'tries':'END'})"""
-
-        #State machine for grasping on Table
-        smach.StateMachine.add("INITIAL",       Initial(),      transitions = {'failed':'INITIAL',      'succ':'SCAN_TABLE',    'tries':'END'}) 
-        smach.StateMachine.add("SCAN_TABLE",    Scan_table(),   transitions = {'failed':'SCAN_TABLE',   'succ':'PRE_TABLE',     'tries':'END'}) 
-        smach.StateMachine.add('PRE_TABLE',     Pre_table(),    transitions = {'failed':'PRE_TABLE',    'succ': 'GRASP_TABLE',  'tries':'END'}) 
-        smach.StateMachine.add('GRASP_TABLE',   Grasp_table(),  transitions = {'failed':'GRASP_TABLE',  'succ': 'POST_TABLE',   'tries':'END'}) 
-        smach.StateMachine.add('POST_TABLE',    Post_table(),   transitions = {'failed':'POST_TABLE',   'succ': 'GO_BOX',       'tries':'END'}) 
-        smach.StateMachine.add('GO_BOX',        Go_box(),       transitions = {'failed':'GO_BOX',       'succ': 'DELIVER',      'tries':'END'})
-        smach.StateMachine.add('DELIVER',       Deliver(),      transitions = {'failed':'DELIVER',      'succ': 'INITIAL',      'tries':'END'})
-
-        #Must join state machines for Floor and Table
+        #State machine for grasping from shelf
+        smach.StateMachine.add("INITIAL",               Initial(),              transitions = {'failed':'INITIAL',              'succ': 'SCAN_SHELF_HL',        'tries':'END'}) 
+        smach.StateMachine.add("SCAN_SHELF_HL",         Scan_shelf_hl(),        transitions = {'failed':'SCAN_SHELF_HL',        'succ': 'PRE_GRASP_SHELF_HL',   'tries':'END'}) 
+        smach.StateMachine.add('PRE_GRASP_SHELF_HL',    Pre_grasp_shelf_hl(),   transitions = {'failed':'PRE_GRASP_SHELF_HL',   'succ': 'GRASP_SHELF_HL',       'tries':'END'}) 
+        smach.StateMachine.add('GRASP_SHELF_HL',        Grasp_shelf_hl(),       transitions = {'failed':'GRASP_SHELF_HL',       'succ': 'POST_GRASP_SHELF_HL',  'tries':'END'}) 
+        smach.StateMachine.add('POST_GRASP_SHELF_HL',   Post_grasp_shelf_hl(),  transitions = {'failed':'INITIAL',              'succ': 'GO_DELIVER_CENTER',    'tries':'END'})
+        smach.StateMachine.add('GO_DELIVER_CENTER',     Go_deliver_center(),    transitions = {'failed':'GO_DELIVER_CENTER',    'succ': 'LISTEN_DELIVER_GOAL',  'tries':'END'})
+        smach.StateMachine.add('LISTEN_DELIVER_GOAL',   Listen_deliver_goal(),  transitions = {'failed':'LISTEN_DELIVER_GOAL',  'succ': 'DELIVER',              'tries':'END'})
+        smach.StateMachine.add('DELIVER',               Deliver(),              transitions = {'failed':'DELIVER',              'succ': 'INITIAL',              'tries':'END'})
 
     outcome = sm.execute()
 

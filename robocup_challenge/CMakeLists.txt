@@ -11,6 +11,7 @@ install(PROGRAMS
   scripts/move.py
   scripts/utils_takeshi.py
   scripts/takeshi_smach_11.py
+  scripts/takeshi_smach_go_get_it.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
