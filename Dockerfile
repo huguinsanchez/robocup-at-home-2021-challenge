@@ -24,15 +24,6 @@ RUN source /opt/ros/$ROS_DISTRO/setup.bash && \
     cd / && rm -r /bio_ik_ws
 
 
-RUN source /opt/ros/$ROS_DISTRO/setup.bash && \
-    mkdir -p /pumas_navigation/src && \
-    cd /pumas_navigation/src && \
-    catkin_init_workspace && \
-    git clone https://github.com/huguinsanchez/pumas_navigation.git && \
-    cd .. && \
-    catkin_make install -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/ros/$ROS_DISTRO -DCATKIN_ENABLE_TESTING=0 && \
-    cd / && rm -r /pumas_navigation
-
 # create workspace folder
 RUN mkdir -p /workspace/src
 
@@ -46,4 +37,4 @@ RUN cd /workspace && /ros_entrypoint.sh rosdep install --from-paths src --ignore
 RUN cd /workspace && /ros_entrypoint.sh catkin_make install -DCMAKE_INSTALL_PREFIX=/opt/ros/$ROS_DISTRO
 
 # command to run the algorithm
-CMD	roslaunch navigation_start navigation_OSS.launch && / rosrun act_pln takeshi_smach_go_get_it.py
+CMD	./workspace/src/env.sh roslaunch navigation_start navigation_OSS.launch && / rosrun act_pln takeshi_smach_go_get_it.py

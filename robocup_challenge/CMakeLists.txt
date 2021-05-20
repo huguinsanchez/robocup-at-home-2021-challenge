@@ -7,9 +7,9 @@ catkin_package(
 )
 
 install(PROGRAMS
-  #scripts/utils.py
-  #scripts/move.py
-  #scripts/utils_takeshi.py
+  scripts/utils.py
+  scripts/move.py
+  scripts/utils_takeshi.py
   #scripts/takeshi_smach_task1.py
   #pumas_navigation/act_pln/scripts/utils.py
   #pumas_navigation/act_pln/scripts/utils_takeshi.py
@@ -18,7 +18,7 @@ install(PROGRAMS
 )
 
 install(DIRECTORY
-  #launch
+  launch
   #pumas_navigation/navigation_start/launch
   #pumas_navigation
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
