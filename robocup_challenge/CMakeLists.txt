@@ -10,7 +10,7 @@ install(PROGRAMS
   scripts/utils.py
   scripts/move.py
   scripts/utils_takeshi.py
-  #scripts/takeshi_smach_task1.py
+  scripts/takeshi_smach_task1.py
   #pumas_navigation/act_pln/scripts/utils.py
   #pumas_navigation/act_pln/scripts/utils_takeshi.py
   #pumas_navigation/act_pln/scripts/takeshi_smach_go_get_it.py
