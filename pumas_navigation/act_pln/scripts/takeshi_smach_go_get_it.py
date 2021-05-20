@@ -520,7 +520,7 @@ class Deliver(Takeshi_states):
 def init(node_name):
     global listener, broadcaster, tfBuffer, tf_static_broadcaster, scene, rgbd, message, omni_base   
     rospy.init_node(node_name)
-    rospy.sleep(15)
+    rospy.sleep(35)
     listener = tf.TransformListener()
     broadcaster = tf.TransformBroadcaster()
     tfBuffer = tf2_ros.Buffer()
