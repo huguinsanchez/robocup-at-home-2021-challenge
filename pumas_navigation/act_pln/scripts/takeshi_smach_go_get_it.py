@@ -293,8 +293,6 @@ class go_to_shelf(Takeshi_states):
 class Scan_shelf_hl(Takeshi_states):
     def takeshi_run(self):     
         global cents, rot, trans
-        goal_x , goal_y, goal_yaw = kl_shelf  
-        move_base_goal(goal_x, goal_y, goal_yaw)
         wb=whole_body.get_current_joint_values()
         wb[3]=wb[3]+0.25
         wb[4]=wb[4]-2
