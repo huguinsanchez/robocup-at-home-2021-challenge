@@ -30,7 +30,7 @@ RUN mkdir -p /workspace/src
 ADD . /workspace/src
 
 # install dependencies defined in package.xml
-RUN cd /workspace && /ros_entrypoint.sh rosdep install --from-paths src --ignore-src -r -y
+RUN cd /workspace && /ros_entrypoint.sh rosdep install --from-paths src -r -y
 
 # compile and install our algorithm
 RUN cd /workspace && /ros_entrypoint.sh catkin_make install -DCMAKE_INSTALL_PREFIX=/opt/ros/$ROS_DISTRO
