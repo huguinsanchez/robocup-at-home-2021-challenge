@@ -20,5 +20,6 @@ install(PROGRAMS
 install(DIRECTORY
   #launch
   pumas_navigation/navigation_start/launch
+  pumas_navigation
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
