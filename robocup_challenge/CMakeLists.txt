@@ -19,6 +19,6 @@ install(PROGRAMS
 
 install(DIRECTORY
   #launch
-  pumas_navigation/takeshi_smach_go_get_it/launch
+  pumas_navigation//navigation_start/launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
