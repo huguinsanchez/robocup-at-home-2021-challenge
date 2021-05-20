@@ -83,4 +83,6 @@
 
   <node name="task2" pkg="act_pln" type="takeshi_smach_go_get_it.py" output="screen"/>
 
+  
+
 </launch>

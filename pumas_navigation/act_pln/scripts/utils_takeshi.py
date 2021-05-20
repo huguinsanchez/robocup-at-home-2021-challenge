@@ -85,7 +85,10 @@ grasped=[0.12814103131904275,
 
 
 
-########## Base Class for takeshi state machine ##########
+
+
+
+########### Base Class for takeshi state machine ##########
 class Takeshi_states(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes = ['succ', 'failed', 'tries'])
