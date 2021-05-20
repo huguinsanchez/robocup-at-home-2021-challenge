@@ -326,18 +326,15 @@ class looking_for_objects(smach.State):
     def __init__(self):
         smach.State.__init__(self,outcomes=['succ','failed','tries'])
         self.tries=0
-        self.rgb2=RGBD()
     def execute(self,userdata):
         global  rot, trans
         head_val = head.get_current_joint_values()
         head_val[0] = np.deg2rad(0)
         head_val[1] = np.deg2rad(-40)        
         head.go(head_val)
-        x=self.rgb2.get_image()
-        print("shape image", x.shape)
         cents = segment_floor()
-        #if len(cents)<1:
-        #    return 'failed'
+        if len(cents)<1:
+            return 'failed'
         print("cents")
         print(len(cents),cents)
         pub = rospy.Publisher('/clicked_point', PointStamped, queue_size=10)
@@ -370,12 +367,6 @@ class looking_for_objects(smach.State):
             return 'succ'
         else:
             return 'failed'
-        global trans_hand
-        move_hand(1)
-        self.tries+=1
-        if self.tries==3:
-            self.tries=0 
-            return'tries'
 
 class go_to_shelf(Takeshi_states):
     def takeshi_run(self):
@@ -400,7 +391,8 @@ class Scan_shelf_hl(Takeshi_states):
         trans, rot = listener.lookupTransform('/map', '/head_rgbd_sensor_gazebo_frame', rospy.Time(0))
         euler = tf.transformations.euler_from_quaternion(rot)
         #print(trans, euler)
-        cents = segment_shelf()
+        #cents = segment_shelf()
+        cents=np.array([[1,2,3]])
         static_tf_publish(cents)
         succ =  True
         return succ
@@ -409,20 +401,32 @@ class Scan_shelf_hl(Takeshi_states):
 #Acomoda el brazo, abre la garra y se acerca al objeto para grasp
 class Pre_grasp_shelf_hl(Takeshi_states):
     def takeshi_run(self):
-        global closest_cent
+        global closest_cent,tf_static_broadcaster
         move_hand(1)
         publish_scene()
 
         arm.go(arm_grasp_shelf_hl)        
-        trans_cents = []
-        
-        for i, cent in enumerate(cents):
-            trans_map, _ = listener.lookupTransform('/map', 'static' + str(i), rospy.Time(0))
-            trans_cents.append(trans_map)
-        
-        np.linalg.norm(np.asarray(trans_cents) - trans , axis = 1)
-        closest_cent = np.argmin(np.linalg.norm(np.asarray(trans_cents) - trans , axis = 1))
-        trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static' + str(closest_cent), rospy.Time(0))
+        #trans_cents = []
+        #
+        #for i, cent in enumerate(cents):
+        #    trans_map, _ = listener.lookupTransform('/map', 'static' + str(i), rospy.Time(0))
+        #    trans_cents.append(trans_map)
+        #
+        #closest_cent = np.argmin(np.linalg.norm(np.asarray(trans_cents) - trans , axis = 1))
+        static_transformStamped = TransformStamped()
+        static_transformStamped.header.stamp = rospy.Time.now()
+        static_transformStamped.header.frame_id = "map"
+        static_transformStamped.child_frame_id = "static_tuna" 
+        static_transformStamped.transform.translation.x = float(2.66)
+        static_transformStamped.transform.translation.y = float(-1.2)
+        static_transformStamped.transform.translation.z = float(0.50)
+        static_transformStamped.transform.rotation.x = 0    
+        static_transformStamped.transform.rotation.y = 0    
+        static_transformStamped.transform.rotation.z = 0    
+        static_transformStamped.transform.rotation.w = 1    
+        tf_static_broadcaster.sendTransform(static_transformStamped)
+
+        trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static_tuna' , rospy.Time(0))
         wb = whole_body.get_current_joint_values()
         wb[0] += trans_hand[2] - 0.1
         wb[1] += trans_hand[1]
@@ -435,7 +439,7 @@ class Grasp_shelf_hl(Takeshi_states):
     def takeshi_run(self):
         global trans_hand
         print(closest_cent)
-        trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static' + str(closest_cent), rospy.Time(0))
+        trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static_tuna' , rospy.Time(0))
         trans_hand, rot_hand
         wb = whole_body.get_current_joint_values()
         wb[0] += trans_hand[2] - 0.05
@@ -444,7 +448,7 @@ class Grasp_shelf_hl(Takeshi_states):
         trans_hand, rot_hand = listener.lookupTransform('/hand_palm_link', 'static0', rospy.Time(0))
         move_hand(0)
         return succ
-        return True
+
 
 
 ##### Define state POST_GRASP_SHELF_HL #####
@@ -516,7 +520,7 @@ class Deliver(Takeshi_states):
 def init(node_name):
     global listener, broadcaster, tfBuffer, tf_static_broadcaster, scene, rgbd, message, omni_base   
     rospy.init_node(node_name)
-
+    rospy.sleep(15)
     listener = tf.TransformListener()
     broadcaster = tf.TransformBroadcaster()
     tfBuffer = tf2_ros.Buffer()
@@ -536,17 +540,17 @@ if __name__== '__main__':
 
     with sm:
         #State machine for grasping from shelf
-        smach.StateMachine.add("INITIAL",               Initial(),              transitions = {'failed':'INITIAL',             'succ': 'GO_TO_DOOR',            'tries':'END'}) 
-        smach.StateMachine.add("GO_TO_DOOR",            go_to_door(),           transitions = {'failed':'GO_TO_DOOR',          'succ': 'LOOKING_FOR_OBJECTS',   'tries':'END'}) 
-        smach.StateMachine.add("LOOKING_FOR_OBJECTS",   looking_for_objects(),  transitions = {'failed':'LOOKING_FOR_OBJECTS', 'succ': 'END',           'tries':'END'}) 
+        smach.StateMachine.add("INITIAL",               Initial(),              transitions = {'failed':'INITIAL',              'succ': 'GO_TO_DOOR',           'tries':'END'}) 
+        smach.StateMachine.add("GO_TO_DOOR",            go_to_door(),           transitions = {'failed':'GO_TO_DOOR',           'succ': 'LOOKING_FOR_OBJECTS',  'tries':'END'}) 
+        smach.StateMachine.add("LOOKING_FOR_OBJECTS",   looking_for_objects(),  transitions = {'failed':'LOOKING_FOR_OBJECTS',  'succ': 'GO_TO_SHELF',          'tries':'END'}) 
         smach.StateMachine.add("GO_TO_SHELF",           go_to_shelf(),          transitions = {'failed':'GO_TO_SHELF',          'succ': 'SCAN_SHELF_HL',        'tries':'END'}) 
         smach.StateMachine.add("SCAN_SHELF_HL",         Scan_shelf_hl(),        transitions = {'failed':'SCAN_SHELF_HL',        'succ': 'PRE_GRASP_SHELF_HL',   'tries':'END'}) 
         smach.StateMachine.add('PRE_GRASP_SHELF_HL',    Pre_grasp_shelf_hl(),   transitions = {'failed':'PRE_GRASP_SHELF_HL',   'succ': 'GRASP_SHELF_HL',       'tries':'END'}) 
         smach.StateMachine.add('GRASP_SHELF_HL',        Grasp_shelf_hl(),       transitions = {'failed':'GRASP_SHELF_HL',       'succ': 'POST_GRASP_SHELF_HL',  'tries':'END'}) 
-        smach.StateMachine.add('POST_GRASP_SHELF_HL',   Post_grasp_shelf_hl(),  transitions = {'failed':'INITIAL',              'succ': 'GO_DELIVER_CENTER',    'tries':'END'})
+        smach.StateMachine.add('POST_GRASP_SHELF_HL',   Post_grasp_shelf_hl(),  transitions = {'failed':'POST_GRASP_SHELF_HL',  'succ': 'GO_DELIVER_CENTER',    'tries':'END'})
         smach.StateMachine.add('GO_DELIVER_CENTER',     Go_deliver_center(),    transitions = {'failed':'GO_DELIVER_CENTER',    'succ': 'LISTEN_DELIVER_GOAL',  'tries':'END'})
         smach.StateMachine.add('LISTEN_DELIVER_GOAL',   Listen_deliver_goal(),  transitions = {'failed':'LISTEN_DELIVER_GOAL',  'succ': 'DELIVER',              'tries':'END'})
-        smach.StateMachine.add('DELIVER',               Deliver(),              transitions = {'failed':'DELIVER',              'succ': 'INITIAL',              'tries':'END'})
+        smach.StateMachine.add('DELIVER',               Deliver(),              transitions = {'failed':'DELIVER',              'succ': 'END',              'tries':'END'})
 
     outcome = sm.execute()
 
