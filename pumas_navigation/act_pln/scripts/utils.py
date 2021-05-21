@@ -412,7 +412,7 @@ class Message():
     u"""bkj"""
 
     def __init__(self):
-        self._msg_sub = rospy.Subscriber('/message1', String, self._msg_callback)
+        self._msg_sub = rospy.Subscriber('/message', String, self._msg_callback)
         self._msg_data = None
 
     def _msg_callback(self, msg):
