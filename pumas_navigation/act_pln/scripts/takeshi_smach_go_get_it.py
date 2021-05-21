@@ -96,6 +96,15 @@ def static_tf_publish(cents):
     return True
 
 
+def callback_message(data):
+     print("##################")
+     print("##################\n")
+     print("message "+ str(count_message)+": "+str(data.data))
+     print("\n##################")
+     print("##################")
+
+
+
 
 
 ########## Functions for takeshi states ##########
@@ -224,9 +233,9 @@ class Initial(Takeshi_states):
 
 class go_to_door(Takeshi_states):
     def takeshi_run(self):
-    	self.msg = message.get_data()
-        self.whom = str(self.msg).split('"')
-        rospy.loginfo("Message recieved - object goal: %s", self.whom[1])
+    	#self.msg = message.get_data()
+        #self.whom = str(self.msg).split('"')
+        #rospy.loginfo("Message recieved - object goal: %s", self.whom[1])
         goal_x , goal_y, goal_yaw = kl_door
         try:
             omni_base.getClose(goal_x, goal_y, goal_yaw,20)
@@ -408,10 +417,10 @@ class Go_deliver_center(Takeshi_states):
 
 class Listen_deliver_goal(Takeshi_states):
     def takeshi_run(self):
-        self.msg = message.get_data()
-        self.whom = str(self.msg).split('"')
-        #self.whom[1].strip('"')
-        rospy.loginfo("Message recieved - person goal: %s", self.whom[1])
+        #self.msg = message.get_data()
+        #self.whom = str(self.msg).split('"')
+        ##self.whom[1].strip('"')
+        #rospy.loginfo("Message recieved - person goal: %s", self.whom[1])
 
         self.whom = "left person"
         if self.whom== "left person":
@@ -446,7 +455,7 @@ class Deliver(Takeshi_states):
 
 #Initialize global variables and node
 def init(node_name):
-    global listener, broadcaster, tfBuffer, tf_static_broadcaster, scene, rgbd, message, omni_base   
+    global listener, broadcaster, tfBuffer, tf_static_broadcaster, scene, rgbd, message, omni_base, count_message 
     rospy.init_node(node_name)
     rospy.sleep(35)
     listener = tf.TransformListener()
@@ -458,6 +467,10 @@ def init(node_name):
     rgbd = RGBD()
     message = Message()
     omni_base=nav_module()
+    count_message=0
+    rospy.Subscriber("/message", String, callback_message)
+
+
    
 #Entry point    
 if __name__== '__main__':
