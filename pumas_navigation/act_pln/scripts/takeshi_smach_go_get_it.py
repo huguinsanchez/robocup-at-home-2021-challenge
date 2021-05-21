@@ -97,11 +97,13 @@ def static_tf_publish(cents):
 
 
 def callback_message(data):
-     print("##################")
-     print("##################\n")
-     print("message "+ str(count_message)+": "+str(data.data))
-     print("\n##################")
-     print("##################")
+    global count_message
+    print("##################")
+    print("##################\n")
+    print("message "+ str(count_message)+": "+str(data.data))
+    count_message+=1
+    print("\n##################")
+    print("##################")
 
 
 
@@ -467,7 +469,7 @@ def init(node_name):
     rgbd = RGBD()
     message = Message()
     omni_base=nav_module()
-    count_message=0
+    count_message=1
     rospy.Subscriber("/message", String, callback_message)
 
 
