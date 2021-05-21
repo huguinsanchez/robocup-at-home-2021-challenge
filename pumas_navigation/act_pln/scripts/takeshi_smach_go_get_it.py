@@ -224,6 +224,9 @@ class Initial(Takeshi_states):
 
 class go_to_door(Takeshi_states):
     def takeshi_run(self):
+    	self.msg = message.get_data()
+        self.whom = str(self.msg).split('"')
+        rospy.loginfo("Message recieved - object goal: %s", self.whom[1])
         goal_x , goal_y, goal_yaw = kl_door
         try:
             omni_base.getClose(goal_x, goal_y, goal_yaw,20)
@@ -405,9 +408,11 @@ class Go_deliver_center(Takeshi_states):
 
 class Listen_deliver_goal(Takeshi_states):
     def takeshi_run(self):
-        """self.msg = message.get_data()
+        self.msg = message.get_data()
         self.whom = str(self.msg).split('"')
-        self.whom[1].strip('"')"""
+        #self.whom[1].strip('"')
+        rospy.loginfo("Message recieved - person goal: %s", self.whom[1])
+
         self.whom = "left person"
         if self.whom== "left person":
             rospy.loginfo("Delivering to the %s", self.whom)
