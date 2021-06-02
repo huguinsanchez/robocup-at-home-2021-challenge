@@ -2,6 +2,8 @@ FROM ghcr.io/hsr-project/hsrb_robocup_dspl_binary:forclass
 
 SHELL [ "/bin/bash", "-c" ]
 
+
+RUN  curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
 # install depending packages (install moveit! algorithms on the workspace side, since moveit-commander loads it from the workspace)
 RUN apt-get update && \
     apt-get install -y git ros-$ROS_DISTRO-moveit ros-$ROS_DISTRO-moveit-commander ros-$ROS_DISTRO-move-base-msgs ros-$ROS_DISTRO-ros-numpy ros-$ROS_DISTRO-geometry && \
