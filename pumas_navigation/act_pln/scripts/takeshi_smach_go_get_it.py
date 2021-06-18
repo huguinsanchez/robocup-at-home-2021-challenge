@@ -44,7 +44,7 @@ def seg_floor(image,points_data,lower=200,upper=50000):
 
 	cv2_img=plane_mask.astype('uint8')
 	img=plane_mask.astype('uint8')
-	_,contours, hierarchy = cv2.findContours(thresh.astype('uint8'),cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+	contours, hierarchy = cv2.findContours(thresh.astype('uint8'),cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 	i=0
 	cents=[]
 	for i, contour in enumerate(contours):
@@ -105,11 +105,14 @@ def static_tf_publish(cents):
 
 
 def callback_message(data):
-	global count_message
+	global count_message , food_item, person_to_deliver
 	print("##################")
 	print("##################\n")
 	print("message "+ str(count_message)+": "+str(data.data))
 	count_message+=1
+	x=data.data.split(" to person ")
+	food_item=x[0]
+	person_to_deliver=x[1]
 	print("\n##################")
 	print("##################")
 
@@ -131,7 +134,7 @@ def seg_shelf():
     plane_mask=points_data['z']
     cv2_img=plane_mask.astype('uint8')
     img=im4
-    _,contours, hierarchy = cv2.findContours(im4.astype('uint8'),cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(im4.astype('uint8'),cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     i=0
     cents=[]
     for i, contour in enumerate(contours):
@@ -425,30 +428,33 @@ class Grasp_shelf_hl(Takeshi_states):
 
 ##### Define state GO_BOX #####
 # Se mueve hacia la posicion de entrega 
-class Go_deliver_center(Takeshi_states):
-	def takeshi_run(self):
-		goal_x, goal_y, goal_yaw =  kl_deliver #Known location friends
-		succ = move_base_goal(goal_x, goal_y - 0.1, 180)
-		publish_scene()
-		return succ
+#class Go_deliver_center(Takeshi_states):
+#	def takeshi_run(self):
+#		goal_x, goal_y, goal_yaw =  kl_deliver #Known location friends
+#		succ = move_base_goal(goal_x, goal_y - 0.1, 180)
+#		publish_scene()
+#		return succ
 
 class Listen_deliver_goal(Takeshi_states):
+
 	def takeshi_run(self):
 		#self.msg = message.get_data()
 		#self.whom = str(self.msg).split('"')
 		##self.whom[1].strip('"')
 		#rospy.loginfo("Message recieved - person goal: %s", self.whom[1])
-
-		self.whom = "left person"
-		if self.whom== "left person":
-			rospy.loginfo("Delivering to the %s", self.whom)
+		global person_to_deliver
+		#self.whom = "left"
+		#if self.whom== "left person":
+		if person_to_deliver== "left":
+			rospy.loginfo("Delivering to the %s", person_to_deliver)
 			goal_x, goal_y, goal_yaw =  kl_l_deliver #Known location friends_left
 			succ = move_base_goal(goal_x, goal_y - 0.1, 180)
 			publish_scene()
 			return succ
 		else:
-			if self.whom[1] == "right person":
-				rospy.loginfo("Delivering to the %s", self.whom)
+			#if self.whom[1] == "right":
+			if person_to_deliver == "right":
+				rospy.loginfo("Delivering to the %s",person_to_deliver)
 				goal_x, goal_y, goal_yaw =  kl_r_deliver #Known location friends_right
 				succ = move_base_goal(goal_x, goal_y - 0.1, 180)
 				publish_scene()
@@ -472,7 +478,7 @@ class Deliver(Takeshi_states):
 
 #Initialize global variables and node
 def init(node_name):
-	global listener, broadcaster, tfBuffer, tf_static_broadcaster, scene, rgbd, message, omni_base, count_message 
+	global listener, broadcaster, tfBuffer, tf_static_broadcaster, scene, rgbd, message, omni_base, count_message,  food_item, person_to_deliver
 	rospy.init_node(node_name)
 	rospy.sleep(35)
 	listener = tf.TransformListener()
@@ -504,8 +510,8 @@ if __name__== '__main__':
 		smach.StateMachine.add("GO_TO_SHELF",           go_to_shelf(),          transitions = {'failed':'GO_TO_SHELF',          'succ': 'SCAN_SHELF_HL',        'tries':'END'}) 
 		smach.StateMachine.add("SCAN_SHELF_HL",         Scan_shelf_hl(),        transitions = {'failed':'SCAN_SHELF_HL',        'succ': 'PRE_GRASP_SHELF_HL',   'tries':'END'}) 
 		smach.StateMachine.add('PRE_GRASP_SHELF_HL',    Pre_grasp_shelf_hl(),   transitions = {'failed':'PRE_GRASP_SHELF_HL',   'succ': 'GRASP_SHELF_HL',       'tries':'END'}) 
-		smach.StateMachine.add('GRASP_SHELF_HL',        Grasp_shelf_hl(),       transitions = {'failed':'GRASP_SHELF_HL',       'succ': 'GO_DELIVER_CENTER',    'tries':'END'}) 
-		smach.StateMachine.add('GO_DELIVER_CENTER',     Go_deliver_center(),    transitions = {'failed':'GO_DELIVER_CENTER',    'succ': 'LISTEN_DELIVER_GOAL',  'tries':'END'})
+		smach.StateMachine.add('GRASP_SHELF_HL',        Grasp_shelf_hl(),       transitions = {'failed':'GRASP_SHELF_HL',       'succ': 'LISTEN_DELIVER_GOAL',    'tries':'END'}) 
+		#smach.StateMachine.add('GO_DELIVER_CENTER',     Go_deliver_center(),    transitions = {'failed':'GO_DELIVER_CENTER',    'succ': 'LISTEN_DELIVER_GOAL',  'tries':'END'})
 		smach.StateMachine.add('LISTEN_DELIVER_GOAL',   Listen_deliver_goal(),  transitions = {'failed':'LISTEN_DELIVER_GOAL',  'succ': 'DELIVER',              'tries':'END'})
 		smach.StateMachine.add('DELIVER',               Deliver(),              transitions = {'failed':'DELIVER',              'succ': 'END',                  'tries':'END'})
 
