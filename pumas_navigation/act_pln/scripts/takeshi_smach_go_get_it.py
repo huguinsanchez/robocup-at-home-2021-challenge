@@ -428,12 +428,12 @@ class Grasp_shelf_hl(Takeshi_states):
 
 ##### Define state GO_BOX #####
 # Se mueve hacia la posicion de entrega 
-#class Go_deliver_center(Takeshi_states):
-#	def takeshi_run(self):
-#		goal_x, goal_y, goal_yaw =  kl_deliver #Known location friends
-#		succ = move_base_goal(goal_x, goal_y - 0.1, 180)
-#		publish_scene()
-#		return succ
+class Go_deliver_center(Takeshi_states):
+	def takeshi_run(self):
+		goal_x, goal_y, goal_yaw =  kl_deliver #Known location friends
+		succ = move_base_goal(goal_x, goal_y - 0.1, 180)
+		publish_scene()
+		return succ
 
 class Listen_deliver_goal(Takeshi_states):
 
@@ -510,8 +510,8 @@ if __name__== '__main__':
 		smach.StateMachine.add("GO_TO_SHELF",           go_to_shelf(),          transitions = {'failed':'GO_TO_SHELF',          'succ': 'SCAN_SHELF_HL',        'tries':'END'}) 
 		smach.StateMachine.add("SCAN_SHELF_HL",         Scan_shelf_hl(),        transitions = {'failed':'SCAN_SHELF_HL',        'succ': 'PRE_GRASP_SHELF_HL',   'tries':'END'}) 
 		smach.StateMachine.add('PRE_GRASP_SHELF_HL',    Pre_grasp_shelf_hl(),   transitions = {'failed':'PRE_GRASP_SHELF_HL',   'succ': 'GRASP_SHELF_HL',       'tries':'END'}) 
-		smach.StateMachine.add('GRASP_SHELF_HL',        Grasp_shelf_hl(),       transitions = {'failed':'GRASP_SHELF_HL',       'succ': 'LISTEN_DELIVER_GOAL',    'tries':'END'}) 
-		#smach.StateMachine.add('GO_DELIVER_CENTER',     Go_deliver_center(),    transitions = {'failed':'GO_DELIVER_CENTER',    'succ': 'LISTEN_DELIVER_GOAL',  'tries':'END'})
+		smach.StateMachine.add('GRASP_SHELF_HL',        Grasp_shelf_hl(),       transitions = {'failed':'GRASP_SHELF_HL',       'succ': 'GO_DELIVER_CENTER',    'tries':'END'}) 
+		smach.StateMachine.add('GO_DELIVER_CENTER',     Go_deliver_center(),    transitions = {'failed':'GO_DELIVER_CENTER',    'succ': 'LISTEN_DELIVER_GOAL',  'tries':'END'})
 		smach.StateMachine.add('LISTEN_DELIVER_GOAL',   Listen_deliver_goal(),  transitions = {'failed':'LISTEN_DELIVER_GOAL',  'succ': 'DELIVER',              'tries':'END'})
 		smach.StateMachine.add('DELIVER',               Deliver(),              transitions = {'failed':'DELIVER',              'succ': 'END',                  'tries':'END'})
 

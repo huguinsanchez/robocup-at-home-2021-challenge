@@ -6,9 +6,9 @@
   <remap from="/navigation/localization/static_map" to="/navigation/obs_avoid/get_augmented_map"/>
   <!--remap from="/static_map" to="/navigation/obs_avoid/get_augmented_map"/-->
   <!--param name="robot_description_semantic" textfile="$(find knowledge)/manipulation/hsrb.srdf"/-->
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find knowledge)/hri/config.rviz">
+  <!--node name="rviz" pkg="rviz" type="rviz" args="-d $(find knowledge)/hri/config.rviz">
     <remap from="/initialpose" to="/navigation/localization/initialpose"/>
-  </node>
+  </node-->
 
   <group ns="hardware">
     <node name="head" pkg="head" type="head_node" output="screen"/>
@@ -81,7 +81,7 @@
     <node name="pred_arms_poses" pkg="knowledge" type="pred_poses_mani_node" respawn="true" output="screen" args="-f $(find knowledge)/manipulation/predef_poses/"/>
   </group>
 
-  <!--node name="task2" pkg="act_pln" type="takeshi_smach_go_get_it.py" output="screen"/-->
+  <node name="task2" pkg="act_pln" type="takeshi_smach_go_get_it.py" output="screen"/>
 
   
 
